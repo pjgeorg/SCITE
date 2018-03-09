@@ -31,14 +31,6 @@ int* getRandTreeCode(int n){                // as usual n is the number of mutat
 	return code;
 }
 
-bool changeBeta(double prob){
-	 double percent = (rand() % 100)+1;    // between 1 and 100
-	 if(percent <= prob*100){
-		 return true;
-	 }
-	 return false;
-}
-
 int sampleRandomMove(std::vector<double> prob){ // picks randomly one of the tree moves based on the move probabilities
 
     double percent = (rand() % 100)+1;    // between 1 and 100

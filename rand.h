@@ -13,7 +13,6 @@
 //#include <string>
 #include "matrices.h"
 
-bool changeBeta(double prob);
 int sampleRandomMove(std::vector<double> prob);
 int* getRandTreeCode(int n);
 
@@ -76,6 +75,19 @@ template<class T>
 inline auto sampleTwoElementsWithoutReplacement(T const size)
 {
     return sampleTwoElementsWithoutReplacement<T>(0, size-1);
+}
+
+template<class T>
+inline auto changeBeta(T const prob)
+{
+    if(getRandomNumber<T>(0,1) <= prob)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 // This creates the parent vector of a random binary tree. Entries 0...m-1 are for the leafs.
