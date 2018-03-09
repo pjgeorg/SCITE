@@ -83,14 +83,3 @@ double sample_0_1(){
   //return (((double) rand()+0.5) / ((RAND_MAX+1)));
   return ((double) rand() / RAND_MAX);
 }
-
-int getElemFromQueue(int index, std::vector<int> queue){
-	int elem = queue.at(index);
-	if (index != queue.size() - 1)
-	{
-		queue[index] = std::move(queue.back());
-	}
-
-	//cout << queue.size() << " elements in queue in subroutine\n";
-	return elem;
-}
