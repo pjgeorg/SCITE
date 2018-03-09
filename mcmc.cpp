@@ -68,8 +68,8 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
 	for(int r=0; r<noOfReps; r++){   // repeat the MCMC, start over with random tree each time, only best score and list of best trees is kept between repetitions
 
 		//cout << "MCMC repetition " << r << "\n";
-		Vector<int>   currTreeParentVec;
-		if(treeType=='m'){currTreeParentVec = toVector(getRandParentVec(parentVectorSize), parentVectorSize);}                                     // start MCMC with random tree
+		DynamicArray<int>   currTreeParentVec;
+		if(treeType=='m'){currTreeParentVec = toDynamicArray(getRandParentVec(parentVectorSize), parentVectorSize);}                                     // start MCMC with random tree
 		else{             currTreeParentVec = getRandomBinaryTree(m);}                                                 // transposed case: random binary tree
 
 		bool** currTreeAncMatrix =  parentVector2ancMatrix(currTreeParentVec.data(),parentVectorSize);
@@ -123,7 +123,7 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
         			moveAccepted = true;
         			free_boolMatrix(currTreeAncMatrix);                                            // discard outdated tree
         			currTreeAncMatrix = parentVector2ancMatrix(propTreeParVec,parentVectorSize); // update matrix of current tree
-        			currTreeParentVec = toVector(propTreeParVec, parentVectorSize);                                         // update parent vector of current tree
+        			currTreeParentVec = toDynamicArray(propTreeParVec, parentVectorSize);                                         // update parent vector of current tree
         			currTreeLogScore  = propTreeLogScore;                                       // update score of current tree
         			currScore = currTreeLogScore+currBetaLogScore;
         		}

@@ -11,12 +11,13 @@
 #include <vector>
 
 template<class T>
-using Vector = std::vector<T>;
+using DynamicArray = std::vector<T>;
 
+// Temporary, should be removed after refactor
 template<class T>
-auto toVector(T const*const data, std::size_t size)
+auto toDynamicArray(T const*const data, std::size_t size)
 {
-    Vector<T> vec(size);
+    DynamicArray<T> vec(size);
     for(std::size_t i = 0; i<size; ++i)
     {
         vec[i] = data[i];

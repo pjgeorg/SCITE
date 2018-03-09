@@ -62,9 +62,9 @@ inline auto getRandomNumber(T const low, T const high)
 template<class T = int, class U = std::size_t>
 inline auto getRandomBinaryTree(U count)
 {
-    auto leafsAndInnerNodesParents = Vector<T>((2 * count) - 2);
+    auto leafsAndInnerNodesParents = DynamicArray<T>((2 * count) - 2);
 
-    Vector<U> queue(count);
+    DynamicArray<U> queue(count);
     for(int i = 0; i < queue.size(); i++)
     {
         queue[i] = i;
