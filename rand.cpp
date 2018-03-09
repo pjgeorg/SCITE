@@ -75,7 +75,7 @@ int* sampleTwoElementsWithoutReplacement(int n){
 
 int pickRandomNumber(int n){
 
-    return getRandomNumber(0, n-1);
+    return getRandomNumber(n);
 }
 
 double sample_0_1(){

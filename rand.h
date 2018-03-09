@@ -56,6 +56,12 @@ inline auto getRandomNumber(T const low, T const high)
     return dist(RandomGenerator()());
 }
 
+template<class T>
+inline auto getRandomNumber(T const size)
+{
+    return getRandomNumber<T>(0, size-1);
+}
+
 // This creates the parent vector of a random binary tree. Entries 0...m-1 are for the leafs.
 // Entries m....2m-3 are for the inner nodes except the root, the root has index 2m-2 which has no parent
 // and therefore has no entry in the parent vector
@@ -72,12 +78,12 @@ inline auto getRandomBinaryTree(U count)
 
     while(queue.size() > 1)
     {
-        auto pos = getRandomNumber<U>(0, queue.size() - 1);
+        auto pos = getRandomNumber<U>(queue.size());
         auto child1 = queue[pos];
         queue[pos] = queue.back();
         queue.pop_back();
 
-        pos = getRandomNumber<U>(0, queue.size() - 1);
+        pos = getRandomNumber<U>(queue.size());
         auto child2 = queue[pos];
         queue[pos] = count;
 
