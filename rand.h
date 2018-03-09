@@ -13,8 +13,6 @@
 //#include <string>
 #include "matrices.h"
 
-int sampleRandomMove(std::vector<double> prob);
-
 class RandomGenerator
 {
     public:
@@ -133,6 +131,19 @@ inline auto getRandomBinaryTree(U count)
     }
 
     return leafsAndInnerNodesParents;
+}
+
+template<class T>
+inline auto sampleRandomMove(DynamicArray<T> const &prob){ // picks randomly one of the tree moves based on the move probabilities
+    auto percent = getRandomNumber<T>(0,1);
+    auto probSum = prob[1];
+    for(std::size_t i=1; i<prob.size()-1; ++i){    // start at index 1; the probability at prob[0] is for changing the error rate (which is treated separately)
+        if(percent <= probSum){
+          return i;
+        }
+        probSum += prob[i+1];
+    }
+    return prob.size()-1;
 }
 
 #endif

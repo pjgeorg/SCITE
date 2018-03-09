@@ -15,19 +15,3 @@
 #include "matrices.h"
 
 std::default_random_engine RandomGenerator::sEngine((std::random_device())());
-
-using namespace std;
-
-
-int sampleRandomMove(std::vector<double> prob){ // picks randomly one of the tree moves based on the move probabilities
-
-    double percent = (rand() % 100)+1;    // between 1 and 100
-    double probSum = prob[1];
-    for(int i=1; i<prob.size()-1; i++){    // start at index 1; the probability at prob[0] is for changing the error rate (which is treated separately)
-        if(percent <= probSum*100){
-          return i;
-        }
-        probSum += prob[i+1];
-    }
-    return prob.size()-1;
-}
