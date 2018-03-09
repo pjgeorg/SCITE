@@ -11,6 +11,7 @@
 #include <vector>
 #include <random>
 //#include <string>
+#include "matrices.h"
 
 bool changeBeta(double prob);
 int sampleRandomMove(std::vector<double> prob);
@@ -19,7 +20,6 @@ int pickRandomNumber(int n);
 double sample_0_1();
 int* getRandTreeCode(int n);
 bool samplingByProb(double prob);
-int* getRandomBinaryTree(int m);
 
 class RandomGenerator
 {
@@ -55,4 +55,38 @@ inline auto getRandomNumber(T const low, T const high)
 
     return dist(RandomGenerator()());
 }
+
+// This creates the parent vector of a random binary tree. Entries 0...m-1 are for the leafs.
+// Entries m....2m-3 are for the inner nodes except the root, the root has index 2m-2 which has no parent
+// and therefore has no entry in the parent vector
+template<class T = int, class U = std::size_t>
+inline auto getRandomBinaryTree(U count)
+{
+    auto leafsAndInnerNodesParents = Vector<T>((2 * count) - 2);
+
+    Vector<U> queue(count);
+    for(int i = 0; i < queue.size(); i++)
+    {
+        queue[i] = i;
+    }
+
+    while(queue.size() > 1)
+    {
+        auto pos = getRandomNumber<U>(0, queue.size() - 1);
+        auto child1 = queue[pos];
+        queue[pos] = queue.back();
+        queue.pop_back();
+
+        pos = getRandomNumber<U>(0, queue.size() - 1);
+        auto child2 = queue[pos];
+        queue[pos] = count;
+
+        leafsAndInnerNodesParents[child1] = count;
+        leafsAndInnerNodesParents[child2] = count;
+        ++count;
+    }
+
+    return leafsAndInnerNodesParents;
+}
+
 #endif

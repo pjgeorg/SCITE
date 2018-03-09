@@ -94,36 +94,3 @@ int getElemFromQueue(int index, std::vector<int> queue){
 	//cout << queue.size() << " elements in queue in subroutine\n";
 	return elem;
 }
-
-// This creates the parent vector of a random binary tree. Entries 0...m-1 are for the leafs.
-// Entries m....2m-3 are for the inner nodes except the root, the root has index 2m-2 which has no parent
-// and therefore has no entry in the parent vector
-int* getRandomBinaryTree(int m){
-	int parentCount = (2*m)-2;     // the m leafs have a parent and so have m-2 of the m-1 inner nodes
-	int* leafsAndInnerNodesParents = init_intArray(parentCount, -1);
-
-	std::vector<int> queue;
-	for(int i=0; i<m; i++){queue.push_back(i);}   // add the m leafs to the queue
-	//cout << queue.size() << " elements in queue\n";
-	int innerNodeCount = m;
-	while(queue.size()>1){
-		int pos = pickRandomNumber(queue.size());
-		int child1 = queue.at(pos);
-		if (pos != queue.size() - 1){queue[pos] = std::move(queue.back());}
-		queue.pop_back();
-		//cout << queue.size() << " elements in queue\n";
-
-		pos = pickRandomNumber(queue.size());
-		int child2 = queue.at(pos);
-		if (pos != queue.size() - 1){queue[pos] = std::move(queue.back());}
-		queue.pop_back();
-		//cout << queue.size() << " elements in queue\n";
-
-		leafsAndInnerNodesParents[child1] = innerNodeCount;
-		leafsAndInnerNodesParents[child2] = innerNodeCount;
-		queue.push_back(innerNodeCount);
-		innerNodeCount++;
-	}
-	return leafsAndInnerNodesParents;
-}
-

@@ -8,6 +8,25 @@
 #ifndef MATRICES_H
 #define MATRICES_H
 
+#include <vector>
+
+template<class T>
+using Vector = std::vector<T>;
+
+template<class T>
+auto toVector(T const*const data, std::size_t size)
+{
+    Vector<T> vec(size);
+    for(std::size_t i = 0; i<size; ++i)
+    {
+        vec[i] = data[i];
+    }
+
+    delete [] data;
+
+    return vec;
+}
+
 int** sumMatrices(int** first, int** second, int n, int m);
 double getMaxEntry(double* array, int n);
 int ** transposeMatrix(int** matrix, int n, int m);

@@ -68,16 +68,16 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
 	for(int r=0; r<noOfReps; r++){   // repeat the MCMC, start over with random tree each time, only best score and list of best trees is kept between repetitions
 
 		//cout << "MCMC repetition " << r << "\n";
-		int*   currTreeParentVec;
-		if(treeType=='m'){currTreeParentVec = getRandParentVec(parentVectorSize);}                                     // start MCMC with random tree
+		Vector<int>   currTreeParentVec;
+		if(treeType=='m'){currTreeParentVec = toVector(getRandParentVec(parentVectorSize), parentVectorSize);}                                     // start MCMC with random tree
 		else{             currTreeParentVec = getRandomBinaryTree(m);}                                                 // transposed case: random binary tree
 
-		bool** currTreeAncMatrix =  parentVector2ancMatrix(currTreeParentVec,parentVectorSize);
+		bool** currTreeAncMatrix =  parentVector2ancMatrix(currTreeParentVec.data(),parentVectorSize);
 		double** currLogScores = getLogScores(errorRates[0], errorRates[1], errorRates[2], errorRates[3]);           // compute logScores of conditional probabilities
 		double currBeta = betaPriorMean;                                                                                  // the current AD rate
 		double currTreeLogScore;
-		if(treeType=='m'){ currTreeLogScore = scoreTreeAccurate( n, m, currLogScores, dataMatrix, scoreType, currTreeParentVec);}
-		else{              currTreeLogScore = getBinTreeScore(dataMatrix, n, m, currLogScores, currTreeParentVec);}
+		if(treeType=='m'){ currTreeLogScore = scoreTreeAccurate( n, m, currLogScores, dataMatrix, scoreType, currTreeParentVec.data());}
+		else{              currTreeLogScore = getBinTreeScore(dataMatrix, n, m, currLogScores, currTreeParentVec.data());}
 		double currBetaLogScore = (moveProbs[0]==0) ? 0.0 : logBetaPDF(currBeta, bpriora, bpriorb);                     // zero if beta is fixed
 		double currScore = currTreeLogScore+currBetaLogScore;                                                         // combined score of current tree and current beta
 
@@ -93,8 +93,8 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
         		updateLogScores(propLogScores, propBeta);
         		double propBetaLogScore = logBetaPDF(propBeta, bpriora, bpriorb);
         		double propTreeLogScore;
-        		if(treeType=='m'){ propTreeLogScore = scoreTree( n, m, propLogScores, dataMatrix, scoreType, currTreeParentVec, bestTreeLogScore);}   // compute the new tree score for new beta
-        		else{              propTreeLogScore = getBinTreeScore(dataMatrix, n, m, propLogScores, currTreeParentVec);}
+        		if(treeType=='m'){ propTreeLogScore = scoreTree( n, m, propLogScores, dataMatrix, scoreType, currTreeParentVec.data(), bestTreeLogScore);}   // compute the new tree score for new beta
+        		else{              propTreeLogScore = getBinTreeScore(dataMatrix, n, m, propLogScores, currTreeParentVec.data());}
 
         		if (sample_0_1() < exp((propTreeLogScore+propBetaLogScore-currTreeLogScore-currBetaLogScore)*gamma)){               // the proposed move is accepted
         			moveAccepted = true;
@@ -114,17 +114,16 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
         		double nbhcorrection = 1.0;
         		int* propTreeParVec;
         		double propTreeLogScore;
-        		if(treeType=='m'){ propTreeParVec = proposeNewTree(moveProbs, n, currTreeAncMatrix, currTreeParentVec, nbhcorrection);              // propose new tree and
+        		if(treeType=='m'){ propTreeParVec = proposeNewTree(moveProbs, n, currTreeAncMatrix, currTreeParentVec.data(), nbhcorrection);              // propose new tree and
         		                   propTreeLogScore = scoreTree( n, m, currLogScores, dataMatrix, scoreType, propTreeParVec, bestTreeLogScore);}    //  get the new tree score
-        		else{              propTreeParVec = proposeNextBinTree(moveProbs, m, currTreeParentVec, currTreeAncMatrix);
+        		else{              propTreeParVec = proposeNextBinTree(moveProbs, m, currTreeParentVec.data(), currTreeAncMatrix);
         		                   propTreeLogScore = getBinTreeScore(dataMatrix, n, m, currLogScores, propTreeParVec);}
 
         		if (sample_0_1() < nbhcorrection*exp((propTreeLogScore-currTreeLogScore)*gamma)){                    // the proposed tree is accepted
         			moveAccepted = true;
         			free_boolMatrix(currTreeAncMatrix);                                            // discard outdated tree
-        			delete[] currTreeParentVec;
         			currTreeAncMatrix = parentVector2ancMatrix(propTreeParVec,parentVectorSize); // update matrix of current tree
-        			currTreeParentVec = propTreeParVec;                                         // update parent vector of current tree
+        			currTreeParentVec = toVector(propTreeParVec, parentVectorSize);                                         // update parent vector of current tree
         			currTreeLogScore  = propTreeLogScore;                                       // update score of current tree
         			currScore = currTreeLogScore+currBetaLogScore;
         		}
@@ -135,17 +134,17 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
 
         	/* If the true tree is given update the smallest distance between a currently best tree and the true tree */
         	if(trueParentVec){
-        		minDistToTrueTree = updateMinDistToTrueTree(trueParentVec, currTreeParentVec, parentVectorSize, minDistToTrueTree, currScore, bestScore);
+        		minDistToTrueTree = updateMinDistToTrueTree(trueParentVec, currTreeParentVec.data(), parentVectorSize, minDistToTrueTree, currScore, bestScore);
         	}
 
         	/* If the list of optimal trees is used, update it */
         	if(useTreeList){
-        		updateTreeList(bestTrees, currTreeParentVec, parentVectorSize, currScore, bestScore, currBeta);
+        		updateTreeList(bestTrees, currTreeParentVec.data(), parentVectorSize, currScore, bestScore, currBeta);
         	}
 
         	/* Sample from the posterior if required and past the burn-in phase */
         	if(sample && it>=burnIn && it % step == 0){
-        		sampleOutput << sampleFromPosterior(currTreeLogScore, parentVectorSize, currTreeParentVec, moveProbs[0], currBeta, currScore);
+        		sampleOutput << sampleFromPosterior(currTreeLogScore, parentVectorSize, currTreeParentVec.data(), moveProbs[0], currBeta, currScore);
         	}
 
         	/* Update best tree in case we have found a new best one */
@@ -161,7 +160,6 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
         		optStatesAfterBurnIn++;
         	}
         }
-        delete [] currTreeParentVec;
         free_doubleMatrix(currLogScores);
         free_boolMatrix(currTreeAncMatrix);
 	}                                              // last repetition of MCMC done
