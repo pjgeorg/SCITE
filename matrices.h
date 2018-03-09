@@ -9,6 +9,25 @@
 #define MATRICES_H
 
 #include <vector>
+#include <array>
+
+template<class T, std::size_t tSize>
+using StaticArray = std::array<T, tSize>;
+
+// Temporary, should be removed after refactor
+template<class T, std::size_t tSize>
+auto toStaticArray(T const*const data)
+{
+    StaticArray<T, tSize> arr;
+    for(std::size_t i = 0; i<tSize; ++i)
+    {
+        arr[i] = data[i];
+    }
+
+    delete [] data;
+
+    return arr;
+}
 
 template<class T>
 using DynamicArray = std::vector<T>;
