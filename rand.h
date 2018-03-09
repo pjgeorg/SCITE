@@ -15,7 +15,6 @@
 
 bool changeBeta(double prob);
 int sampleRandomMove(std::vector<double> prob);
-double sample_0_1();
 int* getRandTreeCode(int n);
 bool samplingByProb(double prob);
 

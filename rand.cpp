@@ -60,9 +60,3 @@ bool samplingByProb(double prob){
 	}
 	return false;
 }
-
-double sample_0_1(){
-
-  //return (((double) rand()+0.5) / ((RAND_MAX+1)));
-  return ((double) rand() / RAND_MAX);
-}
