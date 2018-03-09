@@ -15,7 +15,6 @@
 
 bool changeBeta(double prob);
 int sampleRandomMove(std::vector<double> prob);
-int* sampleTwoElementsWithoutReplacement(int n);
 int pickRandomNumber(int n);
 double sample_0_1();
 int* getRandTreeCode(int n);
@@ -60,6 +59,26 @@ template<class T>
 inline auto getRandomNumber(T const size)
 {
     return getRandomNumber<T>(0, size-1);
+}
+
+template<class T>
+auto sampleTwoElementsWithoutReplacement(T const low, T const high)
+{
+    StaticArray<T, 2> values;
+    values[0] = getRandomNumber(low, high);
+    do
+    {
+        values[1] = getRandomNumber(low, high);
+    }
+    while(values[0] == values[1]);
+
+    return values;
+}
+
+template<class T>
+auto sampleTwoElementsWithoutReplacement(T const size)
+{
+    return sampleTwoElementsWithoutReplacement<T>(0, size-1);
 }
 
 // This creates the parent vector of a random binary tree. Entries 0...m-1 are for the leafs.

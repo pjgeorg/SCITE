@@ -43,17 +43,15 @@ int* proposeNewTree(vector<double> moveProbs, int n, bool** currTreeAncMatrix, i
 	}
     else if(movetype==2){   /* swap two node labels  */
     	//cout << "move type is swap node labels\n";
-    	int* nodestoswap = sampleTwoElementsWithoutReplacement(n);
+    	auto nodestoswap = sampleTwoElementsWithoutReplacement(n);
         propTreeParVec    = getNewParentVec_SwapFast(currTreeParentVec, nodestoswap[0], nodestoswap[1], n);
-        delete [] nodestoswap;
     }
     else if(movetype==3){    /*  swap two subtrees  */
 	   //cout << "move type is swap subtrees\n";
-        int* nodestoswap = sampleTwoElementsWithoutReplacement(n);                    // pick the node that will be swapped
-        nodestoswap = reorderToStartWithDescendant(nodestoswap, currTreeAncMatrix);   // make sure we move the descendant first (in case nodes are in same lineage)
+        auto nodestoswap = sampleTwoElementsWithoutReplacement(n);                    // pick the node that will be swapped
+        reorderToStartWithDescendant(nodestoswap, currTreeAncMatrix);   // make sure we move the descendant first (in case nodes are in same lineage)
         int nodeToMove = nodestoswap[0];                                              // now we move the first node chosen and its descendants
         int nextnodeToMove = nodestoswap[1];                                          // next we need to move the second node chosen and its descendants
-        delete [] nodestoswap;
 
         if(currTreeAncMatrix[nextnodeToMove][nodeToMove]==0){                      // the nodes are in different lineages -- simple case
 
@@ -116,13 +114,13 @@ int* getNewParentVec_SwapFast(int* currTreeParentVec, int first, int second, int
 }
 
 /* re-orders the nodes so that the descendant is first in case the nodes are in the same lineage */
-int* reorderToStartWithDescendant(int* nodestoswap, bool** currTreeAncMatrix){
+void reorderToStartWithDescendant(std::array<int,2> &nodestoswap, bool** currTreeAncMatrix){
     if(currTreeAncMatrix[nodestoswap[0]][nodestoswap[1]]==true){  // make sure we move the descendent first
         int temp = nodestoswap[0];
         nodestoswap[0] = nodestoswap[1];
         nodestoswap[1] = temp;
     }
-    return nodestoswap;
+    return;
 }
 
 

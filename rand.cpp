@@ -61,18 +61,6 @@ bool samplingByProb(double prob){
 	return false;
 }
 
-
-int* sampleTwoElementsWithoutReplacement(int n){
-
-    int* result = new int[2];
-	  result[0] = rand() % n;
-	  result[1] = result[0];
-    while(result[0]==result[1]){
-      result[1] = rand() % n;
-    }
-	  return result;
-}
-
 int pickRandomNumber(int n){
 
     return getRandomNumber(n);

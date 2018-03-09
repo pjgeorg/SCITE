@@ -12,7 +12,7 @@ int* proposeNewTree(std::vector<double> moveProbs, int n, bool** currTreeAncMatr
 int choseParent(std::vector<int> &possibleParents, int root);
 int* getNewParentVecFast(int* currTreeParentVec, int nodeToMove, int newParent, int n);
 int* getNewParentVec_SwapFast(int* currTreeParentVec, int first, int second, int n);
-int* reorderToStartWithDescendant(int* nodestoswap, bool** currTreeAncMatrix);
+void reorderToStartWithDescendant(StaticArray<int,2> &nodestoswap, bool** currTreeAncMatrix);
 int* getNewParentVec_Swap(int* currTreeParentVec, int first, int second, int n, int* propTreeParVec);
 bool** getNewAncMatrix_Swap(bool** currTreeAncMatrix, int first, int second, int n, bool** propTreeAncMatrix);
 int* getNewParentVec(int* currTreeParentVec, int nodeToMove, int newParent, int n, int *propTreeParVec);
