@@ -12,8 +12,6 @@
 #include <random>
 //#include <string>
 
-
-void initRand();
 bool changeBeta(double prob);
 int sampleRandomMove(std::vector<double> prob);
 int* sampleTwoElementsWithoutReplacement(int n);

@@ -19,15 +19,6 @@ std::default_random_engine RandomGenerator::sEngine((std::random_device())());
 using namespace std;
 
 
-/*****    functions for sampling random numbers inside C++  *****/
-void initRand(){
-	time_t t;
-	time(&t);
-	srand((unsigned int)t);              // initialize random number generator
-	//srand(1);
-}
-
-
 /* This function gets a number of nodes n, and creates a random pruefer code for a rooted tree with n+1 nodes (root is always node n+1) */
 int* getRandTreeCode(int n){                // as usual n is the number of mutations
 

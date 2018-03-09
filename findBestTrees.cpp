@@ -90,7 +90,10 @@ int main(int argc, char* argv[])
 	double* errorRates = getErrorRatesArray(fd, ad1, ad2, cc);
 
 	/* initialize the random number generator, either with a user defined seed, or a random number */
-		useFixedSeed? srand(fixedSeed) : initRand();
+	if(useFixedSeed)
+    {
+        RandomGenerator().seed(fixedSeed);
+    }
 
 	/** get the true parent vector from GraphViz file if available (for simulated data only)  **/
 	int* trueParentVec = NULL;
