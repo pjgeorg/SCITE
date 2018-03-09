@@ -36,7 +36,7 @@ int* proposeNewTree(vector<double> moveProbs, int n, bool** currTreeAncMatrix, i
 
 	if(movetype==1){       /* prune and re-attach */
 		//cout << "move type is prune and reattach\n";
-		int nodeToMove = pickRandomNumber(n);   // pick a node to move with its subtree
+		int nodeToMove = getRandomNumber(n);   // pick a node to move with its subtree
 		std::vector<int> possibleparents = getNonDescendants(currTreeAncMatrix, nodeToMove, n);      // possible attachment points
 		int newParent = choseParent(possibleparents, n);                                             // randomly pick a new parent among available nodes, root (n+1) is also possible parent
 		propTreeParVec = getNewParentVecFast(currTreeParentVec, nodeToMove, newParent, n);           // create new parent vector
@@ -66,7 +66,7 @@ int* proposeNewTree(vector<double> moveProbs, int n, bool** currTreeAncMatrix, i
         	bool** propTreeAncMatrix = parentVector2ancMatrix(propTreeParVec, n);
         	std::vector<int> nextdescendants = getDescendants(propTreeAncMatrix, nextnodeToMove, n);
         	free_boolMatrix(propTreeAncMatrix);
-        	propTreeParVec[nextnodeToMove] = descendants[pickRandomNumber(descendants.size())];  // node to move is attached to a node chosen uniformly from the descendants of the first node
+        	propTreeParVec[nextnodeToMove] = descendants[getRandomNumber(descendants.size())];  // node to move is attached to a node chosen uniformly from the descendants of the first node
         	nbhcorrection = 1.0*descendants.size()/nextdescendants.size(); // neighbourhood correction needed for MCMC convergence, but not important for simulated annealing
         }
     }
@@ -77,7 +77,7 @@ int* proposeNewTree(vector<double> moveProbs, int n, bool** currTreeAncMatrix, i
 /* picks a parent randomly from the set of possible parents, this set includes the root (n+1) */
 int choseParent(std::vector<int> &possibleParents, int root){
 	possibleParents.push_back(root);                           // add root, as it is also possible attachement point
-    int chosenParentPos = pickRandomNumber(possibleParents.size());  // choose where to append the subtree
+    int chosenParentPos = getRandomNumber(possibleParents.size());  // choose where to append the subtree
     int newParent = possibleParents[chosenParentPos];
 	possibleParents.pop_back();    // remove root from list of possible parents as it is treated as special case later on
 	return newParent;

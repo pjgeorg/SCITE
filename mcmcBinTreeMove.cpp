@@ -47,7 +47,7 @@ int* proposeNextBinTree(std::vector<double> moveProbs, int m, int* currTreeParVe
 			printGraphVizFile(currTreeParVec, parVecLength);
 		}
 
-		int newSibling = possibleSiblings[pickRandomNumber(possibleSiblings.size())]; // pick a new sibling from remaining tree (root can not be a sibling)
+		int newSibling = possibleSiblings[getRandomNumber(possibleSiblings.size())]; // pick a new sibling from remaining tree (root can not be a sibling)
 		propTreeParVec[newSibling] = p;                                               // make the new sibling a child of v's parent
 		propTreeParVec[p] = currTreeParVec[newSibling];                            // make the parent of v the child of the new sibling's former parent
 	}
@@ -67,7 +67,7 @@ int pickNodeToMove(int* currTreeParentVec, int parentVectorLength){
 	bool validNode = false;
 	int rootId = parentVectorLength;
 	while(!validNode){
-		int v = pickRandomNumber(parentVectorLength);   // pick a node for the prune and re-attach step;
+		int v = getRandomNumber(parentVectorLength);   // pick a node for the prune and re-attach step;
 		if(currTreeParentVec[v]!=rootId){               // it has to be a node whose parent is not the root, as node and parent are moved together
 			return v;
 		}                                      // for a binary tree with more than two leafs this can not be an infinite loop

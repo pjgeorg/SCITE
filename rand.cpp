@@ -61,11 +61,6 @@ bool samplingByProb(double prob){
 	return false;
 }
 
-int pickRandomNumber(int n){
-
-    return getRandomNumber(n);
-}
-
 double sample_0_1(){
 
   //return (((double) rand()+0.5) / ((RAND_MAX+1)));
