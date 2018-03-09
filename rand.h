@@ -14,7 +14,6 @@
 #include "matrices.h"
 
 int sampleRandomMove(std::vector<double> prob);
-int* getRandTreeCode(int n);
 
 class RandomGenerator
 {
@@ -88,6 +87,19 @@ inline auto changeBeta(T const prob)
     {
         return false;
     }
+}
+
+/* This function gets a number of nodes n, and creates a random pruefer code for a rooted tree with n+1 nodes (root is always node n+1) */
+template<class T = int, class U = std::size_t>
+inline auto getRandTreeCode(U const n){                // as usual n is the number of mutations
+                        // #nodes = n mutations plus root (wildtype) = n+1
+                        // #codeLength = #nodes-2 = n-1
+    DynamicArray<T> code(n-1);
+	for(int i=0; i<code.size(); ++i)
+    {
+        code[i] = getRandomNumber<T>(n+1);
+	}
+	return code;
 }
 
 // This creates the parent vector of a random binary tree. Entries 0...m-1 are for the leafs.

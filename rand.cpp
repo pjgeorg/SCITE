@@ -19,18 +19,6 @@ std::default_random_engine RandomGenerator::sEngine((std::random_device())());
 using namespace std;
 
 
-/* This function gets a number of nodes n, and creates a random pruefer code for a rooted tree with n+1 nodes (root is always node n+1) */
-int* getRandTreeCode(int n){                // as usual n is the number of mutations
-
-	int nodes = n+1;                        // #nodes = n mutations plus root (wildtype)
-	int codeLength = nodes-2;
-	int* code = new int[codeLength];
-	for(int i=0; i<codeLength; i++){
-		code[i] = rand() % nodes;
-	}
-	return code;
-}
-
 int sampleRandomMove(std::vector<double> prob){ // picks randomly one of the tree moves based on the move probabilities
 
     double percent = (rand() % 100)+1;    // between 1 and 100

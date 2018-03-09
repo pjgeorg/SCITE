@@ -253,9 +253,8 @@ int getNextInQueue(bool* queue, int pos, int length){
 
 /* creates a random parent vector for nodes 0, .., n with node n as root*/
 int* getRandParentVec(int n){
-	int* randCode = getRandTreeCode(n);
-	int* randParent = prueferCode2parentVector(randCode, n-1);
-	delete [] randCode;
+	auto randCode = getRandTreeCode(n);
+	int* randParent = prueferCode2parentVector(randCode.data(), n-1);
 	return randParent;
 }
 
