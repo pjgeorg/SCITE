@@ -3,32 +3,33 @@
  *
  *  Created on: Mar 27, 2015
  *      Author: jahnka
+ *  Modified on: Mar, 2018
+ *      Author: pjgeorg
  */
 
 #ifndef RAND_H
 #define RAND_H
 
-#include <vector>
 #include <random>
-//#include <string>
+
 #include "matrices.h"
 
 class RandomGenerator
 {
-    public:
-        template<class T>
-        auto seed(T const &seed)
-        {
-            sEngine.seed(seed);
-        }
+public:
+    template<class T>
+    auto seed(T const &seed)
+    {
+        sEngine.seed(seed);
+    }
 
-        auto& operator()()
-        {
-            return sEngine;
-        }
+    auto &operator()()
+    {
+        return sEngine;
+    }
 
-    private:
-        static std::default_random_engine sEngine;
+private:
+    static std::default_random_engine sEngine;
 };
 
 template<class T>
@@ -51,7 +52,7 @@ inline auto getRandomNumber(T const low, T const high)
 template<class T>
 inline auto getRandomNumber(T const size)
 {
-    return getRandomNumber<T>(0, size-1);
+    return getRandomNumber<T>(0, size - 1);
 }
 
 template<class T>
@@ -62,8 +63,7 @@ inline auto sampleTwoElementsWithoutReplacement(T const low, T const high)
     do
     {
         values[1] = getRandomNumber(low, high);
-    }
-    while(values[0] == values[1]);
+    } while(values[0] == values[1]);
 
     return values;
 }
@@ -71,13 +71,13 @@ inline auto sampleTwoElementsWithoutReplacement(T const low, T const high)
 template<class T>
 inline auto sampleTwoElementsWithoutReplacement(T const size)
 {
-    return sampleTwoElementsWithoutReplacement<T>(0, size-1);
+    return sampleTwoElementsWithoutReplacement<T>(0, size - 1);
 }
 
 template<class T>
 inline auto changeBeta(T const prob)
 {
-    if(getRandomNumber<T>(0,1) <= prob)
+    if(getRandomNumber<T>(0, 1) <= prob)
     {
         return true;
     }
@@ -87,22 +87,26 @@ inline auto changeBeta(T const prob)
     }
 }
 
-/* This function gets a number of nodes n, and creates a random pruefer code for a rooted tree with n+1 nodes (root is always node n+1) */
+/* This function gets a number of nodes n, and creates a random pruefer code for
+ * a rooted tree with n+1 nodes (root is always node n+1) */
 template<class T = int, class U = std::size_t>
-inline auto getRandTreeCode(U const n){                // as usual n is the number of mutations
-                        // #nodes = n mutations plus root (wildtype) = n+1
-                        // #codeLength = #nodes-2 = n-1
-    DynamicArray<T> code(n-1);
-	for(int i=0; i<code.size(); ++i)
+inline auto getRandTreeCode(U const n)
+{
+    // as usual n is the number of mutations
+    // #nodes = n mutations plus root (wildtype) = n+1
+    // #codeLength = #nodes-2 = n-1
+    DynamicArray<T> code(n - 1);
+    for(int i = 0; i < code.size(); ++i)
     {
-        code[i] = getRandomNumber<T>(n+1);
-	}
-	return code;
+        code[i] = getRandomNumber<T>(n + 1);
+    }
+    return code;
 }
 
-// This creates the parent vector of a random binary tree. Entries 0...m-1 are for the leafs.
-// Entries m....2m-3 are for the inner nodes except the root, the root has index 2m-2 which has no parent
-// and therefore has no entry in the parent vector
+// This creates the parent vector of a random binary tree. Entries 0...m-1 are
+// for the leafs. Entries m....2m-3 are for the inner nodes except the root, the
+// root has index 2m-2 which has no parent and therefore has no entry in the
+// parent vector
 template<class T = int, class U = std::size_t>
 inline auto getRandomBinaryTree(U count)
 {
@@ -133,17 +137,24 @@ inline auto getRandomBinaryTree(U count)
     return leafsAndInnerNodesParents;
 }
 
+// picks randomly one of the tree moves based on the move probabilities
 template<class T>
-inline auto sampleRandomMove(DynamicArray<T> const &prob){ // picks randomly one of the tree moves based on the move probabilities
-    auto percent = getRandomNumber<T>(0,1);
+inline auto sampleRandomMove(DynamicArray<T> const &prob)
+{
+    auto percent = getRandomNumber<T>(0, 1);
     auto probSum = prob[1];
-    for(std::size_t i=1; i<prob.size()-1; ++i){    // start at index 1; the probability at prob[0] is for changing the error rate (which is treated separately)
-        if(percent <= probSum){
-          return i;
+
+    // start at index 1; the probability at prob[0] is for changing the error
+    // rate (which is treated separately)
+    for(std::size_t i = 1; i < prob.size() - 1; ++i)
+    {
+        if(percent <= probSum)
+        {
+            return i;
         }
-        probSum += prob[i+1];
+        probSum += prob[i + 1];
     }
-    return prob.size()-1;
+    return prob.size() - 1;
 }
 
-#endif
+#endif // RAND_H
