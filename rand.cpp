@@ -14,6 +14,8 @@
 #include <time.h>
 #include "matrices.h"
 
+std::default_random_engine RandomGenerator::sEngine((std::random_device())());
+
 using namespace std;
 
 
@@ -82,7 +84,7 @@ int* sampleTwoElementsWithoutReplacement(int n){
 
 int pickRandomNumber(int n){
 
-    return (rand() % n);
+    return getRandomNumber(0, n-1);
 }
 
 double sample_0_1(){
