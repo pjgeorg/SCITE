@@ -16,7 +16,6 @@
 bool changeBeta(double prob);
 int sampleRandomMove(std::vector<double> prob);
 int* getRandTreeCode(int n);
-bool samplingByProb(double prob);
 
 class RandomGenerator
 {
@@ -60,7 +59,7 @@ inline auto getRandomNumber(T const size)
 }
 
 template<class T>
-auto sampleTwoElementsWithoutReplacement(T const low, T const high)
+inline auto sampleTwoElementsWithoutReplacement(T const low, T const high)
 {
     StaticArray<T, 2> values;
     values[0] = getRandomNumber(low, high);
@@ -74,7 +73,7 @@ auto sampleTwoElementsWithoutReplacement(T const low, T const high)
 }
 
 template<class T>
-auto sampleTwoElementsWithoutReplacement(T const size)
+inline auto sampleTwoElementsWithoutReplacement(T const size)
 {
     return sampleTwoElementsWithoutReplacement<T>(0, size-1);
 }

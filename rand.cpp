@@ -51,12 +51,3 @@ int sampleRandomMove(std::vector<double> prob){ // picks randomly one of the tre
     }
     return prob.size()-1;
 }
-
-
-bool samplingByProb(double prob){
-	double percent = rand() % 100;
-	if(percent <= prob*100){
-		return true;
-	}
-	return false;
-}
