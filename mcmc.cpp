@@ -69,7 +69,7 @@ std::string runMCMCbeta(vector<struct treeBeta>& bestTrees, double* errorRates, 
 
 		//cout << "MCMC repetition " << r << "\n";
 		DynamicArray<int>   currTreeParentVec;
-		if(treeType=='m'){currTreeParentVec = toDynamicArray(getRandParentVec(parentVectorSize), parentVectorSize);}                                     // start MCMC with random tree
+		if(treeType=='m'){currTreeParentVec = getRandParentVec<int>(parentVectorSize);}                                     // start MCMC with random tree
 		else{             currTreeParentVec = getRandomBinaryTree(m);}                                                 // transposed case: random binary tree
 
 		bool** currTreeAncMatrix =  parentVector2ancMatrix(currTreeParentVec.data(),parentVectorSize);

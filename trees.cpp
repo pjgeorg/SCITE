@@ -17,7 +17,6 @@
 #include "matrices.h"
 #include "treelist.h"
 #include "trees.h"
-#include "rand.h"
 #include "output.h"
 
 using namespace std;
@@ -111,49 +110,6 @@ bool** parentVector2ancMatrix(int* parent, int n){
 		ancMatrix[i][i] = true;
 	}
 	return ancMatrix;
-}
-
-/* given a Pruefer code, compute the corresponding parent vector */
-int* prueferCode2parentVector(int* code, int codeLength){
-	int nodeCount = codeLength+1;
-	int* parent = new int[nodeCount];
-	//print_intArray(code, codeLength);
-	int* lastOcc = getLastOcc(code, codeLength);    // node id -> index of last occ in code, -1 if no occurrence or if id=root
-	bool* queue = getInitialQueue(code, codeLength);  // queue[node]=true if all children have been attached to this node, or if it is leaf
-	int queueCutter = -1;    // this is used for a node that has been passed by the "queue" before all children have been attached
-	int next = getNextInQueue(queue, 0, codeLength+1);
-
-	for(int i=0; i<codeLength; i++){               // add new edge to tree from smallest node with all children attached to its parent
-		if(queueCutter >=0){
-			parent[queueCutter] = code[i];         // this node is queueCutter if the queue has already passed this node
-			//cout << queueCutter << " -> " << code[i] << "\n";
-			queueCutter = -1;
-		}
-		else{
-			parent[next] = code[i];                               // use the next smallest node in the queue, otherwise
-			//cout << next << " -> " << code[i] << "\n";
-			next = getNextInQueue(queue, next+1, codeLength+1);     // find next smallest element in the queue
-		}
-
-		if(lastOcc[code[i]]==i){                               // an element is added to the queue, or we have a new queueCutter
-			updateQueue(code[i], queue, next);
-			queueCutter = updateQueueCutter(code[i], queue, next);
-		}
-	}
-	if(queueCutter>=0){
-		parent[queueCutter] = nodeCount;
-		//cout << queueCutter << " -> " << nodeCount << "\n";
-	}
-	else{
-		parent[next] = nodeCount;
-		//cout << next << " -> " << nodeCount << "\n";
-	}
-
-	delete [] lastOcc;
-	delete [] queue;
-	//print_intArray(parent, codeLength+1);
-	//getGraphVizFileContentNumbers(parent, codeLength+1);
-	return parent;
 }
 
 bool* getInitialQueue(int* code, int codeLength){

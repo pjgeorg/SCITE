@@ -38,6 +38,50 @@ auto getChildListFromParentVector(DynamicArray<T> const &parents)
     return childList;
 }
 
+/* given a Pruefer code, compute the corresponding parent vector */
+template<class T>
+auto prueferCode2parentVector(DynamicArray<T> &code)
+{
+    auto nodeCount = code.size() + 1;
+    DynamicArray<T> parent(nodeCount);
+	int* lastOcc = getLastOcc(code.data(), code.size());    // node id -> index of last occ in code, -1 if no occurrence or if id=root
+	bool* queue = getInitialQueue(code.data(), code.size());  // queue[node]=true if all children have been attached to this node, or if it is leaf
+	int queueCutter = -1;    // this is used for a node that has been passed by the "queue" before all children have been attached
+	int next = getNextInQueue(queue, 0, code.size()+1);
+
+	for(int i=0; i<code.size(); i++){               // add new edge to tree from smallest node with all children attached to its parent
+		if(queueCutter >=0){
+			parent[queueCutter] = code[i];         // this node is queueCutter if the queue has already passed this node
+			//cout << queueCutter << " -> " << code[i] << "\n";
+			queueCutter = -1;
+		}
+		else{
+			parent[next] = code[i];                               // use the next smallest node in the queue, otherwise
+			//cout << next << " -> " << code[i] << "\n";
+			next = getNextInQueue(queue, next+1, code.size()+1);     // find next smallest element in the queue
+		}
+
+		if(lastOcc[code[i]]==i){                               // an element is added to the queue, or we have a new queueCutter
+			updateQueue(code[i], queue, next);
+			queueCutter = updateQueueCutter(code[i], queue, next);
+		}
+	}
+	if(queueCutter>=0){
+		parent[queueCutter] = nodeCount;
+		//cout << queueCutter << " -> " << nodeCount << "\n";
+	}
+	else{
+		parent[next] = nodeCount;
+		//cout << next << " -> " << nodeCount << "\n";
+	}
+
+	delete [] lastOcc;
+	delete [] queue;
+	return parent;
+}
+
+
+
 /* counts the number of branches in a tree, this is the same as the number of leafs in the tree */
 template<class T>
 auto countBranches(DynamicArray<T> const & parents)
@@ -59,7 +103,7 @@ template<class T>
 auto getRandParentVec(std::size_t n)
 {
 	auto randCode = getRandTreeCode(n);
-    return prueferCode2parentVector(randCode.data(), n-1);
+    return prueferCode2parentVector(randCode);
 }
 
 // TODO: Temporary functions, remove after refactor
