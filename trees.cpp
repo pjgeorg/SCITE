@@ -141,18 +141,6 @@ int updateQueueCutter(int node, bool* queue, int next){
 	}
 }
 
-
-int* getLastOcc(int* code, int codeLength){
-	int* lastOcc = init_intArray(codeLength+2, -1);
-	int root = codeLength+1;
-	for(int i=0; i<codeLength; i++){
-		if(code[i] != root){
-			lastOcc[code[i]] = i;
-		}
-	}
-	return lastOcc;
-}
-
 int getNextInQueue(bool* queue, int pos, int length){
 	for(int i=pos; i<length; i++){
 		if(queue[i]==true){

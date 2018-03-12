@@ -16,7 +16,6 @@ int* prueferCode2parentVector(int* code, int codeLength);
 int* getBreadthFirstTraversal(int* parent, int n);
 bool** parentVector2ancMatrix(int* parent, int n);
 bool* getInitialQueue(int* code, int codeLength);
-int* getLastOcc(int* code, int codeLength);
 int getNextInQueue(bool* queue, int pos, int length);
 void updateQueue(int node, bool* queue, int next);
 int updateQueueCutter(int node, bool* queue, int next);
@@ -38,13 +37,28 @@ auto getChildListFromParentVector(DynamicArray<T> const &parents)
     return childList;
 }
 
+template<class T>
+auto getLastOcc(DynamicArray<T> const &code)
+{
+    DynamicArray<T> lastOcc(code.size() + 2, -1);
+    auto root = code.size() + 1;
+	for(std::size_t i=0; i<code.size(); ++i)
+    {
+		if(code[i] != root)
+        {
+			lastOcc[code[i]] = i;
+		}
+	}
+	return lastOcc;
+}
+
 /* given a Pruefer code, compute the corresponding parent vector */
 template<class T>
 auto prueferCode2parentVector(DynamicArray<T> &code)
 {
     auto nodeCount = code.size() + 1;
     DynamicArray<T> parent(nodeCount);
-	int* lastOcc = getLastOcc(code.data(), code.size());    // node id -> index of last occ in code, -1 if no occurrence or if id=root
+	auto lastOcc = getLastOcc(code);    // node id -> index of last occ in code, -1 if no occurrence or if id=root
 	bool* queue = getInitialQueue(code.data(), code.size());  // queue[node]=true if all children have been attached to this node, or if it is leaf
 	int queueCutter = -1;    // this is used for a node that has been passed by the "queue" before all children have been attached
 	int next = getNextInQueue(queue, 0, code.size()+1);
@@ -75,7 +89,6 @@ auto prueferCode2parentVector(DynamicArray<T> &code)
 		//cout << next << " -> " << nodeCount << "\n";
 	}
 
-	delete [] lastOcc;
 	delete [] queue;
 	return parent;
 }
