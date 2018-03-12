@@ -51,7 +51,7 @@ std::vector<int> getNonDescendants(bool**& ancMatrix, int node, int n){
 /* counts the number of branches in a tree, this is the same as the number of leafs in the tree */
 int countBranches(int* parents, int length){
 	int count = 0;
-	vector<vector<int> > childList = getChildListFromParentVector(parents, length);
+	auto childList = getChildListFromParentVector(parents, length);
 	for(int i=0; i<childList.size(); i++){
 		if(childList.at(i).size()==0){ count++; }
 	}
@@ -60,16 +60,6 @@ int countBranches(int* parents, int length){
 	}
 	childList.clear();
 	return count;
-}
-
-/* converts a parent vector to the list of children */
-vector<vector<int> > getChildListFromParentVector(int* parents, int n){
-
-	vector<vector<int> > childList(n+1);
-	for(int i=0; i<n; i++){
-		childList.at(parents[i]).push_back(i);
-	}
-	return childList;
 }
 
 void deleteChildLists(vector<vector<int> > &childLists){
