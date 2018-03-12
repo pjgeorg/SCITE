@@ -112,45 +112,6 @@ bool** parentVector2ancMatrix(int* parent, int n){
 	return ancMatrix;
 }
 
-bool* getInitialQueue(int* code, int codeLength){
-	//cout << "code Length: " << codeLength << "\n";
-	int queueLength = codeLength+2;
-	//cout << "queueLength: " << queueLength << "\n";
-	bool* queue = init_boolArray(queueLength, true);
-
-	for(int i=0; i<codeLength; i++){
-		queue[code[i]] = false;
-	}
-	return queue;
-}
-
-
-void updateQueue(int node, bool* queue, int next){
-
-	if(node>=next){                //  add new node to queue
-		queue[node] = true;
-	}
-}
-
-int updateQueueCutter(int node, bool* queue, int next){
-	if(node>=next){
-		return -1;         // new node can be added to the queue
-	}
-	else{
-		return node;         // new node needs to cut the queue, as it has already passed it
-	}
-}
-
-int getNextInQueue(bool* queue, int pos, int length){
-	for(int i=pos; i<length; i++){
-		if(queue[i]==true){
-			return i;
-		}
-	}
-	//cout << "No node left in queue. Possibly a cycle?";
-	return length;
-}
-
 /* creates the parent vector for a star tree with node n as center and 0,...,n-1 as leafs */
 int* starTreeVec(int n){
 	int* starTreeVec = new int[n];
