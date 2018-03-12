@@ -27,13 +27,12 @@ int* reverse(int* array, int length);
 
 #include "matrices.h"
 
-// TODO: Replate input by DynamicArray
 /* converts a parent vector to the list of children */
 template<class T>
-auto getChildListFromParentVector(T *parents, int n)
+auto getChildListFromParentVector(DynamicArray<T> const &parents)
 {
-    DynamicArray<DynamicArray<T>> childList(n+1);
-    for(std::size_t i = 0; i < n; ++i)
+    DynamicArray<DynamicArray<T>> childList(parents.size()+1);
+    for(std::size_t i = 0; i < parents.size(); ++i)
     {
         childList[parents[i]].push_back(i);
     }
@@ -42,9 +41,10 @@ auto getChildListFromParentVector(T *parents, int n)
 
 /* counts the number of branches in a tree, this is the same as the number of leafs in the tree */
 template<class T>
-auto countBranches(T* parents, int length){
+auto countBranches(DynamicArray<T> const & parents)
+{
     std::size_t count = 0;
-	auto childList = getChildListFromParentVector(parents, length);
+	auto childList = getChildListFromParentVector(parents);
 	for(std::size_t i=0; i<childList.size(); ++i)
     {
 		if(childList[i].size()==0)
@@ -55,7 +55,19 @@ auto countBranches(T* parents, int length){
 	return count;
 }
 
+// TODO: Temporary functions, remove after refactor
+template<class T>
+auto getChildListFromParentVector(T *parents, int length)
+{
+    auto tParents = toDynamicArray(parents, length);
+    return getChildListFromParentVector(tParents);
+}
 
-
+template<class T>
+auto countBranches(T* parents, int length)
+{
+    auto tParents = toDynamicArray(parents, length);
+    return countBranches(tParents);
+}
 
 #endif /* TREES_H_ */
