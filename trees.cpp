@@ -48,20 +48,6 @@ std::vector<int> getNonDescendants(bool**& ancMatrix, int node, int n){
 	return ancestors;
 }
 
-/* counts the number of branches in a tree, this is the same as the number of leafs in the tree */
-int countBranches(int* parents, int length){
-	int count = 0;
-	auto childList = getChildListFromParentVector(parents, length);
-	for(int i=0; i<childList.size(); i++){
-		if(childList.at(i).size()==0){ count++; }
-	}
-	for(int i=0; i<childList.size(); i++){
-		childList[i].clear();
-	}
-	childList.clear();
-	return count;
-}
-
 /* converts a tree given as lists of children to the Newick tree format */
 /* Note: This works only if the recursion is started with the root node which is n+1 */
 string getNewickCode(vector<vector<int> > list, int root){

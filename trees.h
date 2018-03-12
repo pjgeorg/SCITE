@@ -11,7 +11,6 @@ using namespace std;
 
 std::vector<int> getDescendants(bool** ancMatrix, int node, int n);
 std::vector<int> getNonDescendants(bool**& ancMatrix, int node, int n);
-int countBranches(int* parents, int length);
 string getNewickCode(vector<vector<int> > list, int root);
 int* prueferCode2parentVector(int* code, int codeLength);
 int* getBreadthFirstTraversal(int* parent, int n);
@@ -40,6 +39,23 @@ auto getChildListFromParentVector(T *parents, int n)
     }
     return childList;
 }
+
+/* counts the number of branches in a tree, this is the same as the number of leafs in the tree */
+template<class T>
+auto countBranches(T* parents, int length){
+    std::size_t count = 0;
+	auto childList = getChildListFromParentVector(parents, length);
+	for(std::size_t i=0; i<childList.size(); ++i)
+    {
+		if(childList[i].size()==0)
+        {
+            ++count;
+        }
+	}
+	return count;
+}
+
+
 
 
 #endif /* TREES_H_ */
