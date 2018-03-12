@@ -23,7 +23,6 @@ void updateQueue(int node, bool* queue, int next);
 int updateQueueCutter(int node, bool* queue, int next);
 int* starTreeVec(int n);
 bool** starTreeMatrix(int n);
-int* reverse(int* array, int length);
 
 #include "matrices.h"
 
@@ -69,5 +68,4 @@ auto countBranches(T* parents, int length)
     auto tParents = toDynamicArray(parents, length);
     return countBranches(tParents);
 }
-
 #endif /* TREES_H_ */

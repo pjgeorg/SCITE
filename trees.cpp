@@ -91,19 +91,6 @@ int* getBreadthFirstTraversal(int* parent, int n){
 	return bft;
 }
 
-int* reverse(int* array, int length){
-	int temp;
-
-	for (int i = 0; i < length/2; ++i) {
-		temp = array[length-i-1];
-		array[length-i-1] = array[i];
-		array[i] = temp;
-	}
-	return array;
-}
-
-
-
 /* transforms a parent vector to an ancestor matrix*/
 bool** parentVector2ancMatrix(int* parent, int n){
 	bool** ancMatrix = init_boolMatrix(n, n, false);
