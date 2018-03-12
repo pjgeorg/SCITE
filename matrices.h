@@ -14,7 +14,7 @@
 template<class T, std::size_t tSize>
 using StaticArray = std::array<T, tSize>;
 
-// Temporary, should be removed after refactor
+// Temporary, should be removed after refactor, causes mem-leaks
 template<class T, std::size_t tSize>
 auto toStaticArray(T const*const data)
 {
@@ -24,7 +24,7 @@ auto toStaticArray(T const*const data)
         arr[i] = data[i];
     }
 
-    delete [] data;
+//    delete [] data;
 
     return arr;
 }
@@ -32,7 +32,7 @@ auto toStaticArray(T const*const data)
 template<class T>
 using DynamicArray = std::vector<T>;
 
-// Temporary, should be removed after refactor
+// Temporary, should be removed after refactor, causes mem-leaks
 template<class T>
 auto toDynamicArray(T const*const data, std::size_t size)
 {
@@ -42,7 +42,7 @@ auto toDynamicArray(T const*const data, std::size_t size)
         vec[i] = data[i];
     }
 
-    delete [] data;
+//    delete [] data;
 
     return vec;
 }
