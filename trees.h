@@ -12,7 +12,6 @@ using namespace std;
 std::vector<int> getDescendants(bool** ancMatrix, int node, int n);
 std::vector<int> getNonDescendants(bool**& ancMatrix, int node, int n);
 int countBranches(int* parents, int length);
-void deleteChildLists(vector<vector<int> > &childLists);
 string getNewickCode(vector<vector<int> > list, int root);
 int* prueferCode2parentVector(int* code, int codeLength);
 int* getBreadthFirstTraversal(int* parent, int n);

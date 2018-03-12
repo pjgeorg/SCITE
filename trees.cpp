@@ -62,13 +62,6 @@ int countBranches(int* parents, int length){
 	return count;
 }
 
-void deleteChildLists(vector<vector<int> > &childLists){
-	for(int i=0; i<childLists.size(); i++){
-		childLists[i].clear();
-	}
-	childLists.clear();
-}
-
 /* converts a tree given as lists of children to the Newick tree format */
 /* Note: This works only if the recursion is started with the root node which is n+1 */
 string getNewickCode(vector<vector<int> > list, int root){
