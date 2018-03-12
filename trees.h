@@ -15,7 +15,6 @@ string getNewickCode(vector<vector<int> > list, int root);
 int* prueferCode2parentVector(int* code, int codeLength);
 int* getBreadthFirstTraversal(int* parent, int n);
 bool** parentVector2ancMatrix(int* parent, int n);
-int* getRandParentVec(int n);
 bool* getInitialQueue(int* code, int codeLength);
 int* getLastOcc(int* code, int codeLength);
 int getNextInQueue(bool* queue, int pos, int length);
@@ -25,6 +24,7 @@ int* starTreeVec(int n);
 bool** starTreeMatrix(int n);
 
 #include "matrices.h"
+#include "rand.h"
 
 /* converts a parent vector to the list of children */
 template<class T>
@@ -52,6 +52,14 @@ auto countBranches(DynamicArray<T> const & parents)
         }
 	}
 	return count;
+}
+
+/* creates a random parent vector for nodes 0, .., n with node n as root*/
+template<class T>
+auto getRandParentVec(std::size_t n)
+{
+	auto randCode = getRandTreeCode(n);
+    return prueferCode2parentVector(randCode.data(), n-1);
 }
 
 // TODO: Temporary functions, remove after refactor

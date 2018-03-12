@@ -207,15 +207,6 @@ int getNextInQueue(bool* queue, int pos, int length){
 	return length;
 }
 
-/* creates a random parent vector for nodes 0, .., n with node n as root*/
-int* getRandParentVec(int n){
-	auto randCode = getRandTreeCode(n);
-	int* randParent = prueferCode2parentVector(randCode.data(), n-1);
-	return randParent;
-}
-
-
-
 /* creates the parent vector for a star tree with node n as center and 0,...,n-1 as leafs */
 int* starTreeVec(int n){
 	int* starTreeVec = new int[n];
