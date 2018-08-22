@@ -38,16 +38,6 @@ int** sumMatrices(int** first, int** second, int n, int m){
 	return first;
 }
 
-int ** transposeMatrix(int** matrix, int n, int m){
-	int ** transposed = allocate_intMatrix(m, n);
-	for(int i=0; i<m; i++){
-		for(int j=0; j<n;j++){
-			transposed[i][j] = matrix[j][i];
-		}
-	}
-	return transposed;
-}
-
 void addToMatrix(int** first, int** second, int n, int m){
 	for(int i=0; i<n; i++){
 		for(int j=0; j<m; j++){

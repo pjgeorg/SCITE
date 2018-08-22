@@ -49,7 +49,6 @@ auto toDynamicArray(T const*const data, std::size_t size)
 
 int** sumMatrices(int** first, int** second, int n, int m);
 double getMaxEntry(double* array, int n);
-int ** transposeMatrix(int** matrix, int n, int m);
 void addToMatrix(int** first, int** second, int n, int m);
 double** allocate_doubleMatrix(int n, int m);
 int** allocate_intMatrix(int n, int m);

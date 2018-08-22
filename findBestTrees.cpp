@@ -365,7 +365,7 @@ vector<double> setMoveProbs(){
 
 int** getDataMatrix(int n, int m, string fileName){
 
-    int** dataMatrix = init_intMatrix(n, m, -1);
+    int** dataMatrix = init_intMatrix(m, n, -1);
 
     ifstream in(fileName.c_str());
 
@@ -378,15 +378,13 @@ int** getDataMatrix(int n, int m, string fileName){
 
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < m; j++) {
-            in >> dataMatrix[i][j];
+            in >> dataMatrix[j][i];
         }
     }
 
     in.close();
-    int** transposedMatrix = transposeMatrix(dataMatrix, n, m);
-    free_intMatrix(dataMatrix);
 
-    return transposedMatrix;
+    return dataMatrix;
 }
 
 
