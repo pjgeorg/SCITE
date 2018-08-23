@@ -23,9 +23,35 @@
 #include "rand.h"
 #include "scoreTree.h"
 
+constexpr auto cGenes = 18;
+constexpr auto cSamples = 58;
+
+
 using namespace std;
 
-int** getDataMatrix(int n, int m, string fileName);
+template<std::size_t G, std::size_t S>
+static inline auto getDataMatrix(string fileName)
+{
+    Matrix<int, S, G> dataMatrix;
+
+    ifstream in(fileName.c_str());
+
+    if (!in) {
+        std::cerr << "Cannot open file " << fileName << std::endl;
+        std::abort();
+    }
+
+    for (std::size_t g = 0; g < G; ++g) {
+        for (std::size_t s = 0; s < S; ++s) {
+            in >> dataMatrix[s][g];
+        }
+    }
+
+    in.close();
+
+    return dataMatrix;
+}
+
 double* getErrorRatesArray(double fd, double ad1, double ad2, double cc);
 int readParameters(int argc, char* argv[]);
 string getOutputFilePrefix(string fileName, string outFile);
@@ -85,7 +111,8 @@ int main(int argc, char* argv[])
 
 	/**  read parameters and data file  **/
 	readParameters(argc, argv);
-	int** dataMatrix = getDataMatrix(n, m, fileName);
+    auto dataMatrix = getDataMatrix<cGenes, cSamples>(fileName);
+
 	vector<double> moveProbs = setMoveProbs();
 	double* errorRates = getErrorRatesArray(fd, ad1, ad2, cc);
 
@@ -100,7 +127,7 @@ int main(int argc, char* argv[])
 	if(trueTreeComp==true){ trueParentVec = getParentVectorFromGVfile(trueTreeFileName, n); }
 
 	/**  Find best scoring trees by MCMC  **/
-	sampleOutput = runMCMCbeta(optimalTrees, errorRates, rep, loops, Gamma, moveProbs, n, m, dataMatrix, scoreType, trueParentVec, sampleStep, sample, chi, priorSd, useTreeList, treeType);
+	sampleOutput = runMCMCbeta(optimalTrees, errorRates, rep, loops, Gamma, moveProbs, n, m, toPointer(dataMatrix), scoreType, trueParentVec, sampleStep, sample, chi, priorSd, useTreeList, treeType);
 
 
 	/***  output results  ***/
@@ -138,11 +165,11 @@ int main(int argc, char* argv[])
 
 		if(treeType == 'm'){
 			string output;
-			output = getGraphVizFileContentNames(parentVector, parentVectorSize, getGeneNames(geneNameFile, n), attachSamples, ancMatrix, m, logScores, dataMatrix);
+			output = getGraphVizFileContentNames(parentVector, parentVectorSize, getGeneNames(geneNameFile, n), attachSamples, ancMatrix, m, logScores, toPointer(dataMatrix));
 			writeToFile(output, outputFile);
 		}
 		else{
-			int* bestPlacement = getHighestOptPlacementVector(dataMatrix, n, m, logScores, ancMatrix);
+			int* bestPlacement = getHighestOptPlacementVector(toPointer(dataMatrix), n, m, logScores, ancMatrix);
 			vector<string> names = getGeneNames(geneNameFile, n);
 			vector<string> bestBinTreeLabels = getBinTreeNodeLabels((2*m)-1, bestPlacement, n, getGeneNames(geneNameFile, n));
 			//cout << getGraphVizBinTree(optimalTrees.at(0).tree, (2*m)-1, m, bestBinTreeLabels);
@@ -155,7 +182,6 @@ int main(int argc, char* argv[])
 	delete [] logScores[0];
 	delete [] logScores;
 	delete [] errorRates;
-	free_intMatrix(dataMatrix);
 	cout << optimalTrees.size() << " opt trees \n";
 	emptyVectorFast(optimalTrees, n);
 
@@ -363,29 +389,7 @@ vector<double> setMoveProbs(){
 }
 
 
-int** getDataMatrix(int n, int m, string fileName){
 
-    int** dataMatrix = init_intMatrix(m, n, -1);
-
-    ifstream in(fileName.c_str());
-
-    if (!in) {
-    	cout << "2 Cannot open file " << fileName << "\n";
-      cout << fileName;
-      cout << "\n";
-      return NULL;
-    }
-
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < m; j++) {
-            in >> dataMatrix[j][i];
-        }
-    }
-
-    in.close();
-
-    return dataMatrix;
-}
 
 
 vector<string> getGeneNames(string fileName, int nOrig){

@@ -47,6 +47,52 @@ auto toDynamicArray(T const*const data, std::size_t size)
     return vec;
 }
 
+template<class T, std::size_t N>
+class Vector
+{
+    public:
+        auto &operator[](std::size_t const i)
+        {
+            return mData[i];
+        }
+
+        auto &operator[](std::size_t const i) const
+        {
+            return mData[i];
+        }
+
+    private:
+        std::array<T, N> mData;
+};
+
+template<class T, std::size_t M, std::size_t N>
+class Matrix
+{
+    public:
+        auto &operator[](std::size_t const i)
+        {
+            return mData[i];
+        }
+
+        auto &operator[](std::size_t const i) const
+        {
+            return mData[i];
+        }
+
+    private:
+        Vector<Vector<T, N>, M> mData;
+};
+
+template<class T, std::size_t M, std::size_t N>
+static inline auto toPointer(Matrix<T, M, N> &a)
+{
+    T** data = new T*[M];
+    for(std::size_t i = 0; i<M; ++i)
+        data[i] = reinterpret_cast<T*>(&a) + i*N;
+
+    return data;
+}
+
 int** sumMatrices(int** first, int** second, int n, int m);
 double getMaxEntry(double* array, int n);
 void addToMatrix(int** first, int** second, int n, int m);
