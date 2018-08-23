@@ -23,7 +23,7 @@
 #include "rand.h"
 #include "scoreTree.h"
 
-constexpr auto cGenes = 18;
+constexpr auto cMutations = 18;
 constexpr auto cSamples = 58;
 
 
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 
 	/**  read parameters and data file  **/
 	readParameters(argc, argv);
-    auto dataMatrix = getDataMatrix<cGenes, cSamples>(fileName);
+    auto dataMatrix = getDataMatrix<cMutations, cSamples>(fileName);
 
 	vector<double> moveProbs = setMoveProbs();
 	double* errorRates = getErrorRatesArray(fd, ad1, ad2, cc);
