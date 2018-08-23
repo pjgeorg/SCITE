@@ -25,7 +25,7 @@
 
 constexpr auto cMutations = 18;
 constexpr auto cSamples = 58;
-
+constexpr auto cTreeType = 'm'; // 'm': mutation tree, 't': rooted binary leaf-labelled tree
 
 using namespace std;
 
@@ -52,24 +52,41 @@ static inline auto getDataMatrix(string fileName)
     return dataMatrix;
 }
 
+template<char T, std::size_t N>
+static inline constexpr auto normMoveProbs(std::array<double, N> probs)
+{
+    if(auto sum = std::accumulate(probs.begin(), probs.end(), 0.0); sum != 1.0)
+    {
+        for(auto &v : probs)
+        {
+            v /= sum;
+        }
+    }
+
+    return probs;
+}
+
 double* getErrorRatesArray(double fd, double ad1, double ad2, double cc);
 int readParameters(int argc, char* argv[]);
 string getOutputFilePrefix(string fileName, string outFile);
 string getFileName(string prefix, string ending);
 string getFileName2(int i, string prefix, string ending, char scoreType);
 vector<string> getGeneNames(string fileName, int nOrig);
-vector<double> setMoveProbs();
 int* getParentVectorFromGVfile(string fileName, int n);
 int getMinDist(int* trueVector, std::vector<bool**> optimalTrees, int n);
 void printGeneFrequencies(int** dataMatrix, int n, int m, vector<string> geneNames);
 
 
-double defaultMoveProbs[] = {0.55, 0.4, 0.05};     // moves: change beta / prune&re-attach / swap node labels / swap subtrees
-double defaultMoveProbsBin[] = {0.4, 0.6};    // moves: change beta / prune&re-attach / swap leaf labels
-
-
 double errorRateMove = 0.0;
-vector<double> treeMoves;
+auto treeMoves = [](){if constexpr(cTreeType=='m')
+        {
+            return std::array{0.0, 0.55,0.4, 0.05}; // moves: change beta / prune&re-attach / swap node labels / swap subtrees
+        }
+        else
+        {
+           return std::array{0.0, 0.4, 0.6}; // moves: change beta / prune&re-attach / swap leaf labels
+        }
+    }();
 double chi = 10;
 double priorSd = 0.1;
 string fileName;      // data file
@@ -113,7 +130,7 @@ int main(int argc, char* argv[])
 	readParameters(argc, argv);
     auto dataMatrix = getDataMatrix<cMutations, cSamples>(fileName);
 
-	vector<double> moveProbs = setMoveProbs();
+	auto moveProbs = normMoveProbs<cTreeType>(treeMoves);
 	double* errorRates = getErrorRatesArray(fd, ad1, ad2, cc);
 
 	/* initialize the random number generator, either with a user defined seed, or a random number */
@@ -127,7 +144,7 @@ int main(int argc, char* argv[])
 	if(trueTreeComp==true){ trueParentVec = getParentVectorFromGVfile(trueTreeFileName, n); }
 
 	/**  Find best scoring trees by MCMC  **/
-	sampleOutput = runMCMCbeta(optimalTrees, errorRates, rep, loops, Gamma, moveProbs, n, m, toPointer(dataMatrix), scoreType, trueParentVec, sampleStep, sample, chi, priorSd, useTreeList, treeType);
+	sampleOutput = runMCMCbeta(optimalTrees, errorRates, rep, loops, Gamma, std::vector(moveProbs.begin(), moveProbs.end()), n, m, toPointer(dataMatrix), scoreType, trueParentVec, sampleStep, sample, chi, priorSd, useTreeList, treeType);
 
 
 	/***  output results  ***/
@@ -322,12 +339,12 @@ int readParameters(int argc, char* argv[]){
 			if (i + 1 < argc) { geneNameFile = argv[++i];}
 		}else if (strcmp(argv[i], "-move_probs")==0) {
 			vector<double> newMoveProbs;
-			if (i + 1 < argc) { treeMoves.push_back(atof(argv[++i]));}
-			if (i + 1 < argc) { treeMoves.push_back(atof(argv[++i]));}
+			if (i + 1 < argc) { treeMoves[0] = (atof(argv[++i]));}
+			if (i + 1 < argc) { treeMoves[1] = (atof(argv[++i]));}
 			if (i + 1 < argc){
 				string next = argv[i+1];
 				if(next.compare(0, 1, "-") != 0){
-					treeMoves.push_back(atof(argv[++i]));
+					treeMoves[2] = (atof(argv[++i]));
 				}
 			}
 			//cout << move1_prob << " " << move2_prob << " " << move3_prob << "\n";
@@ -352,41 +369,7 @@ int readParameters(int argc, char* argv[]){
 }
 
 
-vector<double> setMoveProbs(){
-	vector<double> moveProbs;
 
-	moveProbs.push_back(errorRateMove);
-
-	if(treeMoves.size()==0){                                       // use default probabilities
-		if(treeType == 'm'){
-			moveProbs.push_back(defaultMoveProbs[0]);
-			moveProbs.push_back(defaultMoveProbs[1]);
-			moveProbs.push_back(defaultMoveProbs[2]);
-		}
-		else{
-			moveProbs.push_back(defaultMoveProbsBin[0]);
-			moveProbs.push_back(defaultMoveProbsBin[1]);
-		}
-	}
-	else{                                                                            // use probabilities from command line
-		double sum = 0.0;
-		for(int i=0; i< treeMoves.size(); i++){ sum += treeMoves[i]; }
-		if(sum != 1.0){
-			cerr << "move probabilities do not sum to 1.0, recalculating probabilities\n";     // normalize to sum to one
-			for(int i=0; i< treeMoves.size(); i++){
-				treeMoves[i] = treeMoves[i]/sum;
-			}
-			cout << "new move probabilities:";
-			for(int i=0; i< treeMoves.size(); i++){ cout << " " << treeMoves[i];}
-			cout << "\n";
-		}
-		for(int i=0; i< treeMoves.size(); i++){
-			moveProbs.push_back(treeMoves[i]);
-		}
-	}
-	treeMoves.clear();
-	return moveProbs;
-}
 
 
 
