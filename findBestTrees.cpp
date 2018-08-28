@@ -3,6 +3,8 @@
  *
  *  Created on: Mar 27, 2015
  *      Author: jahnka
+ *  Modified on: Aug, 2018
+ *      Author: pjgeorg
  */
 
 #include <stdbool.h>
@@ -21,16 +23,11 @@
 #include "output.h"
 #include "mcmc.h"
 #include "rand.h"
+#include "parameter.h"
 #include "scoreTree.h"
 
-constexpr auto cMutations = 18;
-constexpr auto cSamples = 58;
-constexpr auto cTreeType = 'm'; // 'm': mutation tree, 't': rooted binary leaf-labelled tree
-
-using namespace std;
-
 template<std::size_t G, std::size_t S>
-static inline auto getDataMatrix(string fileName)
+static inline auto getDataMatrix(std::string const &fileName)
 {
     Matrix<int, S, G> dataMatrix;
 
@@ -52,104 +49,258 @@ static inline auto getDataMatrix(string fileName)
     return dataMatrix;
 }
 
-template<char T, std::size_t N>
-static inline constexpr auto normMoveProbs(std::array<double, N> probs)
+template<std::size_t G>
+static inline auto getTrueTree(std::string const &fileName)
 {
-    if(auto sum = std::accumulate(probs.begin(), probs.end(), 0.0); sum != 1.0)
-    {
-        for(auto &v : probs)
-        {
-            v /= sum;
-        }
-    }
+    std::array<int, G> trueTree;
 
-    return probs;
+	std::vector<std::string> lines;
+	std::ifstream input(fileName.c_str());
+
+	std::string line;
+	while(std::getline(input, line))
+    {
+	    if (!line.empty())
+        {
+	        lines.push_back(line);
+        }
+	}
+
+	for(auto const &line : lines)
+    {
+        if(auto found = line.find(" -> "); found != std::string::npos)
+        {
+            auto parent = std::stoi(line.substr(0, found));
+            auto child = std::stoi(line.substr(found + 3));
+            trueTree[child - 1] = parent - 1;
+        }
+	}
+	return trueTree;
 }
 
-double* getErrorRatesArray(double fd, double ad1, double ad2, double cc);
-int readParameters(int argc, char* argv[]);
-string getOutputFilePrefix(string fileName, string outFile);
-string getFileName(string prefix, string ending);
-string getFileName2(int i, string prefix, string ending, char scoreType);
-vector<string> getGeneNames(string fileName, int nOrig);
-int* getParentVectorFromGVfile(string fileName, int n);
-int getMinDist(int* trueVector, std::vector<bool**> optimalTrees, int n);
-void printGeneFrequencies(int** dataMatrix, int n, int m, vector<string> geneNames);
+template<char ScoreType>
+static inline auto getOutputFileName(std::size_t i, std::string const &prefix, std::string const &extension)
+{
+	std::stringstream fileName;
+    fileName << prefix;
 
+    if constexpr(ScoreType == 'm')
+    {
+        fileName << "_ml";
+	}
+    else if constexpr(ScoreType == 's')
+    {
+        fileName << "_map";
+    }
+	else
+    {
+        static_assert(ScoreType != ScoreType, "Unknown score type.");
+    }
 
-double errorRateMove = 0.0;
-auto treeMoves = [](){if constexpr(cTreeType=='m')
-        {
-            return std::array{0.0, 0.55,0.4, 0.05}; // moves: change beta / prune&re-attach / swap node labels / swap subtrees
-        }
-        else
-        {
-           return std::array{0.0, 0.4, 0.6}; // moves: change beta / prune&re-attach / swap leaf labels
-        }
-    }();
-double chi = 10;
-double priorSd = 0.1;
-string fileName;      // data file
-string outFile;       // the name of the outputfile, only the prefix before the dot
-int n;                // number of genes
-int m;                // number of samples
-char scoreType = 'm';
-int rep;            // number of repetitions of the MCMC
-int loops;          // number of loops within a MCMC
-double Gamma = 1;
-double fd;          // rate of false discoveries (false positives 0->1)
-double ad1;          // rate of allelic dropout (false negatives 1->0)
-double ad2 = 0.0;         // rate of allelic dropout (2->1)
-double cc = 0.0;          // rate of falsely discovered homozygous mutations (0->2)
-bool sample = false;
-int sampleStep;
-bool useGeneNames = false;        // use gene names in tree plotting
-string geneNameFile;              // file where the gene names are listed.
-bool trueTreeComp = false;      // set to true if true tree is given as parameter for comparison
-string trueTreeFileName;        // optional true tree
-bool attachSamples = false;       // attach samples to the tree
-bool useFixedSeed = false;      // use a predefined seed for the random number generator
-unsigned int fixedSeed = 1;   // default seed
-bool useTreeList = true;
-char treeType = 'm';        // the default tree is a mutation tree; other option is 't' for (transposed case), where we have a binary leaf-labeled tree
-int maxTreeListSize = -1;  // defines the maximum size of the list of optimal trees, default -1 means no restriction
+    fileName << i << extension;
+	return fileName.str();
+}
 
 int main(int argc, char* argv[])
 {
+    constexpr auto cMutations = 18;
+    constexpr auto cSamples = 58;
+    constexpr auto cTreeType = 'm'; // 'm': mutation tree, 't': rooted binary leaf-labelled tree
+    constexpr auto cScoreType = 'm'; // 'm': default, 's': Sample attachment points are marginalized out
+    constexpr auto cSeed = 1UL;
+    constexpr auto cTrueTree = false;
 
 	/****************   begin timing  *********************/
 			clock_t begin=clock();
 	/****************************************************/
 
+	/**  Get command line parameters  **/
+    auto inputFile = parameterOption<std::string>(argv, argv + argc, "-i");
+    auto repetitions = parameterOption<std::size_t>(argv, argv + argc, "-r");
+    auto chainLength = parameterOption<std::size_t>(argv, argv + argc, "-l");
+    auto fd = parameterOption<double>(argv, argv + argc, "-fd");
+    auto ad = parameterOption<double, 2>(argv, argv + argc, "-ad");
+
+    auto cc = [&argv, &argc](){
+        if(parameterExists(argv, argv + argc, "-cc"))
+        {
+            return parameterOption<double>(argv, argv + argc, "-cc");
+        }
+        else
+        {
+            return 0.0;
+        }
+    }();
+
+    auto errorRates = std::array{fd, ad[0], ad[1], cc};
+
+    auto sampleStep = [&argv, &argc](){
+        if(parameterExists(argv, argv + argc, "-p"))
+        {
+            return parameterOption<std::size_t>(argv, argv + argc, "-p");
+        }
+        else
+        {
+            return std::size_t{0};
+        }
+    }();
+
+    auto errorRateMove = [&argv, &argc](){
+        if(parameterExists(argv, argv + argc, "-e"))
+        {
+            return parameterOption<double>(argv, argv + argc, "-e");
+        }
+        else
+        {
+            return 0.0;
+        }
+    }();
+
+    auto chi = [&argv, &argc](){
+        if(parameterExists(argv, argv+argc, "-x"))
+        {
+            return parameterOption<double>(argv, argv+argc, "-x");
+        }
+        else
+        {
+            return 10.0;
+        }
+    }();
+
+    auto priorStd = [&argv, &argc](){
+        if(parameterExists(argv, argv+argc, "-sd"))
+        {
+            return parameterOption<double>(argv, argv+argc, "-sd");
+        }
+        else
+        {
+            return 0.1;
+        }
+    }();
+
+    auto outputName = [&argv, &argc, &inputFile](){
+        if(parameterExists(argv, argv+argc, "-o"))
+        {
+            return parameterOption<std::string>(argv, argv+argc, "-o");
+        }
+        else
+        {
+            return inputFile.substr(0, inputFile.find_last_of("."));
+        }
+    }();
+
+    auto geneNames = [&argv, &argc](){
+        std::array<std::string, cMutations + 1> names;
+        if(parameterExists(argv, argv+argc, "-names"))
+        {
+            auto fileName = parameterOption<std::string>(argv, argv+argc, "-names");
+            std::ifstream input(fileName);
+            if(!input)
+            {
+                std::cerr << "Cannot open gene names file " << fileName << std::endl;
+                std::abort();
+            }
+
+            for(std::size_t i = 0; i < cMutations; ++i)
+            {
+                input >> names[i];
+            }
+            names[cMutations] = "Root";
+        }
+        else
+        {
+            for(std::size_t i = 0; i <= cMutations; ++i)
+            {
+                std::stringstream id;
+                id << i+1;
+                names[i] = id.str();
+            }
+        }
+        return names;
+    }();
+
+    auto attachSamples = parameterExists(argv, argv + argc, "-a");
+
+    auto maxTreeListSize = [&argv, &argc](){
+        if(parameterExists(argv, argv+argc, "-max_treelist_size"))
+        {
+            return parameterOption<std::size_t>(argv, argv + argc, "-max_treelist_size");
+        }
+        else
+        {
+            return std::numeric_limits<std::size_t>::max();
+        }
+    }();
+
+    auto gamma = [&argv, &argc](){
+        if(parameterExists(argv, argv+argc, "-g"))
+        {
+            return parameterOption<double>(argv, argv + argc, "-g");
+        }
+        else
+        {
+            return 1.0;
+        }
+    }();
+
+    auto useTreeList = !parameterExists(argv, argv + argc, "-no_tree_list");
+
+    auto treeMoves = [&argv, &argc](){
+        if(parameterExists(argv, argv+argc, "-move_probs"))
+        {
+            auto probs = parameterOption<double, cTreeType == 'm' ? 3 : 2>(argv, argv+argc, "-move_probs");
+            if(auto sum = std::accumulate(probs.begin(), probs.end(), 0.0); sum != 1.0)
+            {
+                for(auto &v : probs)
+                {
+                    v /= sum;
+                }
+            }
+            return probs;
+        }
+        else
+        {
+            if constexpr(cTreeType=='m')
+            {
+                return std::array{0.55, 0.4, 0.05};
+            }
+            else
+            {
+                return std::array{0.4, 0.6};
+            }
+        }
+    }();
+
+    // moveProbs: cTreeType == 'm': change beta / prune&re-attach / swap node labels / swap subtrees
+    // moveProbs: cTreeType == 't': change beta / prune&re-attach / swap leaf labels
+	std::array<double, treeMoves.size() + 1> moveProbs;
+    moveProbs[0] = errorRateMove;
+    for(std::size_t i = 1; i<moveProbs.size(); ++i)
+    {
+        moveProbs[i] = treeMoves[i-1];
+    }
+
+    auto dataMatrix = getDataMatrix<cMutations, cSamples>(inputFile);
+
+
+
 	std::vector<struct treeBeta> optimalTrees;            // list of optimal tree/beta combinations found by MCMC
 	std::string sampleOutput;                            // the samples taken in the MCMC as a string for outputting
 
-
-
-	/**  read parameters and data file  **/
-	readParameters(argc, argv);
-    auto dataMatrix = getDataMatrix<cMutations, cSamples>(fileName);
-
-	auto moveProbs = normMoveProbs<cTreeType>(treeMoves);
-	double* errorRates = getErrorRatesArray(fd, ad1, ad2, cc);
-
 	/* initialize the random number generator, either with a user defined seed, or a random number */
-	if(useFixedSeed)
-    {
-        RandomGenerator().seed(fixedSeed);
-    }
+//    RandomGenerator().seed(1);
 
 	/** get the true parent vector from GraphViz file if available (for simulated data only)  **/
 	int* trueParentVec = NULL;
-	if(trueTreeComp==true){ trueParentVec = getParentVectorFromGVfile(trueTreeFileName, n); }
+//	if(trueTreeComp==true){ trueParentVec = getTrueTree<cMutations>(trueTreeFileName); }
 
 	/**  Find best scoring trees by MCMC  **/
-	sampleOutput = runMCMCbeta(optimalTrees, errorRates, rep, loops, Gamma, std::vector(moveProbs.begin(), moveProbs.end()), n, m, toPointer(dataMatrix), scoreType, trueParentVec, sampleStep, sample, chi, priorSd, useTreeList, treeType);
+	sampleOutput = runMCMCbeta(optimalTrees, errorRates.data(), repetitions, chainLength, gamma, std::vector(moveProbs.begin(), moveProbs.end()), cMutations, cSamples, toPointer(dataMatrix), cScoreType, trueParentVec, sampleStep, sampleStep != 0, chi, priorStd, useTreeList, cTreeType);
 
 
 	/***  output results  ***/
 
-	string prefix = getOutputFilePrefix(fileName, outFile);
+	string prefix = outputName;
 
 	/* output the samples taken in the MCMC */
 	stringstream sampleOutputFile;
@@ -159,11 +310,10 @@ int main(int argc, char* argv[])
 
 	/* output the optimal trees found in individual files */
 
-	double** logScores = getLogScores(fd, ad1, ad2, cc);
-	int parentVectorSize = n;
-	if(treeType=='t'){parentVectorSize = (2*m)-2;}                     // transposed case: binary tree, m leafs and m-1 inner nodes, root has no parent
-	int outputSize = optimalTrees.size();
-	if(maxTreeListSize >=0) {outputSize = maxTreeListSize;}            // there is a limit on the number of trees to output
+	double** logScores = getLogScores(fd, ad[0], ad[1], cc);
+	int parentVectorSize = cMutations;
+	if(cTreeType=='t'){parentVectorSize = (2*cSamples)-2;}                     // transposed case: binary tree, m leafs and m-1 inner nodes, root has no parent
+	int outputSize = std::min(optimalTrees.size(), maxTreeListSize);
 	for(int i=0; i<outputSize; i++){
 
 		int* parentVector = optimalTrees.at(i).tree;
@@ -171,24 +321,23 @@ int main(int argc, char* argv[])
 		vector<vector<int> > childLists = getChildListFromParentVector(parentVector, parentVectorSize);
 
 		stringstream newick;
-		string outputFile = getFileName2(i, prefix, ".newick", scoreType);
+		string outputFile = getOutputFileName<cScoreType>(i, prefix, ".newick");
 		newick << getNewickCode(childLists, parentVectorSize) << "\n";
 		writeToFile(newick.str(), outputFile);
-		outputFile = getFileName2(i, prefix, ".gv", scoreType);	                                // print out tree as newick code
+		outputFile = getOutputFileName<cScoreType>(i, prefix, ".gv");	                                // print out tree as newick code
 
 		if(errorRateMove != 0.0){
 			updateLogScores(logScores, optimalTrees[i].beta);
 		}
 
-		if(treeType == 'm'){
+		if(cTreeType == 'm'){
 			string output;
-			output = getGraphVizFileContentNames(parentVector, parentVectorSize, getGeneNames(geneNameFile, n), attachSamples, ancMatrix, m, logScores, toPointer(dataMatrix));
+			output = getGraphVizFileContentNames(parentVector, parentVectorSize, std::vector(geneNames.begin(), geneNames.end()), attachSamples, ancMatrix, cSamples, logScores, toPointer(dataMatrix));
 			writeToFile(output, outputFile);
 		}
 		else{
-			int* bestPlacement = getHighestOptPlacementVector(toPointer(dataMatrix), n, m, logScores, ancMatrix);
-			vector<string> names = getGeneNames(geneNameFile, n);
-			vector<string> bestBinTreeLabels = getBinTreeNodeLabels((2*m)-1, bestPlacement, n, getGeneNames(geneNameFile, n));
+			int* bestPlacement = getHighestOptPlacementVector(toPointer(dataMatrix), cMutations, cSamples, logScores, ancMatrix);
+			vector<string> bestBinTreeLabels = getBinTreeNodeLabels((2*cSamples)-1, bestPlacement, cMutations, std::vector(geneNames.begin(), geneNames.end()));
 			//cout << getGraphVizBinTree(optimalTrees.at(0).tree, (2*m)-1, m, bestBinTreeLabels);
 		}
 
@@ -198,9 +347,8 @@ int main(int argc, char* argv[])
 
 	delete [] logScores[0];
 	delete [] logScores;
-	delete [] errorRates;
 	cout << optimalTrees.size() << " opt trees \n";
-	emptyVectorFast(optimalTrees, n);
+	emptyVectorFast(optimalTrees, cMutations);
 
 
 	/****************   end timing  *********************/
@@ -210,208 +358,3 @@ int main(int argc, char* argv[])
   		cout << "Time elapsed: " << diffms << " ms"<< endl;
   	/****************************************************/
 }
-
-
-
-
-void printGeneFrequencies(int** dataMatrix, int n, int m, vector<string> geneNames){
-	for(int i=0; i<n; i++){
-		int freq = 0;
-		for(int j=0; j<m; j++){
-			if(dataMatrix[j][i]==1 || dataMatrix[j][i]==2){
-				freq++;
-			}
-		}
-		cout << freq << "\t" << geneNames.at(i) << "\n";
-	}
-}
-
-
-
-int* getParentVectorFromGVfile(string fileName, int n){
-	int* parentVector = new int[n];
-	std::vector<std::string> lines;
-	std::ifstream file(fileName.c_str());
-	std::string line;
-	while ( std::getline(file, line) ) {
-	    if ( !line.empty() )
-	        lines.push_back(line);
-	}
-	for(int i=0; i < lines.size(); i++){
-
-		std::size_t found = lines[i].find(" -> ");
-		if (found!=std::string::npos){
-			int parent = atoi(lines[i].substr(0, found).c_str());
-			int child = atoi(lines[i].substr(found+3).c_str());
-			parentVector[child-1] = parent-1;
-	   }
-	}
-	return parentVector;
-}
-
-
-
-int getMinDist(int* trueVector, std::vector<bool**> optimalTrees, int n){
-	int minDist = n+1;
-	for(int i=0; i<optimalTrees.size(); i++){
-		int dist = getSimpleDistance(trueVector, ancMatrixToParVector(optimalTrees.at(i), n), n);
-		minDist = min(minDist, dist);
-	}
-	return minDist;
-}
-
-
-string getOutputFilePrefix(string fileName, string outFile){
-	if(outFile.empty()){
-		int lastIndex = fileName.find_last_of(".");
-		return fileName.substr(0, lastIndex);
-	}
-	return outFile;
-}
-
-
-string getFileName(string prefix, string ending){
-	stringstream fileName;
-	fileName << prefix << ending;
-	return fileName.str();
-}
-
-string getFileName2(int i, string prefix, string ending, char scoreType){
-	stringstream fileName;
-	if(scoreType == 'm'){
-		fileName << prefix << "_ml" << i << ending;
-	}
-	else{
-		fileName << prefix << "_map" << i << ending;
-	}
-	return fileName.str();
-}
-
-int readParameters(int argc, char* argv[]){
-	for (int i = 1; i < argc; ++i) {
-
-		if (strcmp(argv[i], "-i") == 0) {
-			if (i + 1 < argc) { fileName = argv[++i];}
-		} else if (strcmp(argv[i], "-t") == 0) {
-			if (i + 1 < argc) {
-				trueTreeFileName = argv[++i];
-				trueTreeComp = true;
-			}
-		} else if(strcmp(argv[i], "-o")==0) {
-			if (i + 1 < argc) { outFile = argv[++i];}
-		} else if(strcmp(argv[i], "-n")==0) {
-			if (i + 1 < argc) { n = atoi(argv[++i]);}
-		} else if(strcmp(argv[i], "-m")==0) {
-			if (i + 1 < argc) { m = atoi(argv[++i]);}
-		} else if(strcmp(argv[i], "-r") == 0) {
-			if (i + 1 < argc) { rep = atoi(argv[++i]);}
-		} else if(strcmp(argv[i], "-l")==0) {
-			if (i + 1 < argc) { loops = atoi(argv[++i]);}
-		} else if(strcmp(argv[i], "-g")==0) {
-			if (i + 1 < argc) { Gamma = atof(argv[++i]);}
-		} else if(strcmp(argv[i], "-fd")==0) {
-			if (i + 1 < argc) { fd = atof(argv[++i]);}
-		} else if(strcmp(argv[i],"-ad")==0) {
-			if (i + 1 < argc) { ad1 = atof(argv[++i]);}
-			if (i + 1 < argc){
-				string next = argv[i+1];
-				if(next.compare(0, 1, "-") != 0){
-					ad2 = atof(argv[++i]);
-				}
-			}
-		} else if(strcmp(argv[i],"-cc")==0) {
-			if (i + 1 < argc) { cc = atof(argv[++i]);}
-		} else if(strcmp(argv[i],"-e")==0) {
-					if (i + 1 < argc) { errorRateMove = atof(argv[++i]);}
-		} else if(strcmp(argv[i],"-x")==0) {
-							if (i + 1 < argc) { chi = atof(argv[++i]);}
-		} else if(strcmp(argv[i],"-sd")==0) {
-									if (i + 1 < argc) { priorSd = atof(argv[++i]);}
-		} else if (strcmp(argv[i], "-a")==0) {
-			attachSamples = true;
-		} else if(strcmp(argv[i], "-p")==0) {
-			if (i + 1 < argc) {
-				sampleStep = atoi(argv[++i]);
-				sample = true;
-			}
-		}else if (strcmp(argv[i], "-names")==0) {
-			useGeneNames = true;
-			if (i + 1 < argc) { geneNameFile = argv[++i];}
-		}else if (strcmp(argv[i], "-move_probs")==0) {
-			vector<double> newMoveProbs;
-			if (i + 1 < argc) { treeMoves[0] = (atof(argv[++i]));}
-			if (i + 1 < argc) { treeMoves[1] = (atof(argv[++i]));}
-			if (i + 1 < argc){
-				string next = argv[i+1];
-				if(next.compare(0, 1, "-") != 0){
-					treeMoves[2] = (atof(argv[++i]));
-				}
-			}
-			//cout << move1_prob << " " << move2_prob << " " << move3_prob << "\n";
-
-		}else if (strcmp(argv[i], "-seed")==0) {
-			useFixedSeed = true;
-			if (i + 1 < argc) { fixedSeed = atoi(argv[++i]);}
-		}else if (strcmp(argv[i], "-max_treelist_size")==0) {
-					if (i + 1 < argc) { maxTreeListSize = atoi(argv[++i]);}
-		} else if (strcmp(argv[i],"-no_tree_list")==0) {
-					useTreeList = false;
-		} else if (strcmp(argv[i],"-s")==0) {
-			scoreType = 's';
-		} else if (strcmp(argv[i],"-transpose")==0) {
-					treeType = 't';
-		} else {
-			std::cerr << "unknown parameter " << argv[i] << std::endl;
-			return 1;
-		}
-	}
-	return 0;
-}
-
-
-
-
-
-
-
-
-vector<string> getGeneNames(string fileName, int nOrig){
-
-	vector<string> v;
-	ifstream in(fileName.c_str());
-
-
-	n = nOrig;
-
-	if (!in) {
-		//cout << "Cannot open gene names file " << fileName << ", ";
-	    //cout << "using ids instead.\n";
-	    vector<string> empty;
-	    for(int i=0; i<=n; i++){
-	    	stringstream id;
-	    	id << i+1;
-	    	empty.push_back(id.str());
-	    }
-	    return empty;
-	}
-
-	for (int i = 0; i < nOrig; i++) {
-		string temp;
-	    in >> temp;
-	    v.push_back(temp);
-	}
-	v.push_back("Root"); // the root
-	return v;
-}
-
-
-
-double* getErrorRatesArray(double fd, double ad1, double ad2, double cc){
-	double* array = new double[4];
-	array[0] = fd;
-	array[1] = ad1;
-	array[2] = ad2;
-	array[3] = cc;
-	return array;
-}
-
