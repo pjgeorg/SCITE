@@ -1,7 +1,7 @@
 /*
- * parameter.h
+ * parameter.hpp
  *
- *  Created on: Aug 23, 2018
+ *  Created on: Sep, 2018
  *      Author: pjgeorg
  */
 
@@ -45,8 +45,8 @@ static inline auto parameterOption(
 }
 
 template<class T, std::size_t N>
-static inline auto parameterOption(char **begin, char **end, std::string const &parameter,
-    std::array<T, N> &option)
+static inline auto parameterOption(char **begin, char **end,
+    std::string const &parameter, std::array<T, N> &option)
 {
     char **input = std::find(begin, end, parameter);
     if(input != end)
