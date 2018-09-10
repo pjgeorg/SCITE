@@ -29,17 +29,41 @@ int main(int argc, char *argv[])
     using Integer = int;
     using Float = double;
 
-    constexpr auto cMutations = 78;
-    constexpr auto cSamples = 58;
+#ifdef MUTATIONS
+    constexpr auto cMutations = MUTATIONS;
+#else
+#error Number of mutations (MUTATIONS) not defined.
+#endif // MUTATIONS
+
+#ifdef SAMPLES
+    constexpr auto cSamples = SAMPLES;
+#else
+#error Number of samples (SAMPLES) not defined.
+#endif // SAMPLES
 
     // 'm': mutation tree, 't': rooted binary leaf-labelled tree
-    constexpr auto cTreeType = 'm';
+    constexpr auto cTreeType =
+#ifdef TREE_TYPE
+        TREE_TYPE;
+#else
+        'm';
+#endif // TREE_TYPE
 
     // 'm': default, 's': Sample attachment points are marginalized out
-    constexpr auto cScoreType = 'm';
+    constexpr auto cScoreType =
+#ifdef SCORE_TYPE
+        SCORE_TYPE;
+#else
+        'm';
+#endif // SCORE_TYPE
 
     // True mutation tree is known
-    constexpr auto cTrueTree = false;
+    constexpr auto cTrueTree =
+#ifdef TRUE_TREE
+        true;
+#else
+        false;
+#endif // TRUE_TREE
 
     ///////////////////////////////////////////////////////////////////////////
 
