@@ -23,38 +23,26 @@ infinite sites assumption can be made.
 
 **SCITE** is freely available under a GPL3 license at https://gitlab.com/jahnka/SCITE
 
-##    How to run **SCITE**
---------------------------
+## Getting started
+------------------
 
+Start by opening a terminal and cloning the repository:
 
+``` bash
+git clone https://gitlab.com/jahnka/SCITE
+```
 
-### Mac OS X
+Easiest way to stat is using the supplied scite.sh wrapper, e.g.:
 
-To compile the C/C++ program, open a terminal and go to the folder containing the source files, and type
-
-	clang++ *.cpp -o scite
-
-This writes a file named `scite`. With older compiler versions you may need to use the option `-std=c++11`.
-
-Assuming the sample data file dataHou18.csv is located in the same folder, `scite` can then be executed as follows
-
-	./scite -i dataHou18.csv -n 18 -m 58 -r 1 -l 900000 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
-
+``` bash
+cd SCITE
+export CXX=g++ # or clang++
+./scite.sh -i samples/dataHou18.csv -n 18 -m 58 -r 1 -l 900000 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
+```
 This call computes the ML tree(s) for the given dataset and parameter settings. See below for other program options.
 
-### Linux/Unix
-
-To compile the C/C++ program, open a terminal and go to the folder containing the source files, and type
-
-	g++ *.cpp -o scite
-	
-This writes a file named `scite`. With older compiler versions you may need to use the option `-std=c++11`.
-
-Assuming the sample data file dataHou18.csv is located in the same folder, `scite` can then be executed as follows
-
-	./scite -i dataHou18.csv -n 18 -m 58 -r 1 -l 900000 -fd 6.04e-5 -ad 0.21545 0.21545 -cc 1.299164e-05
-
-This call computes the ML tree(s) for the given dataset and parameter settings. See below for other program options.
+Note: For subsequent runs not chaning the parameter n, m, s, transpose, and wether a truee tree is specified,
+you can run the same command, but replace ./scite.sh by ./scite to avoid re-compilation.
 
 ##  Input Files
 ---------------
@@ -186,8 +174,6 @@ To make sure that **SCITE** samples from the posterior distribution `-p <INT>` n
 *	`-g <DOUBLE>` For ML/MAP computation only: Set \<DOUBLE\> to the desired value of gamma (gamma > 1: more local exploration, possibly local optimum; gamma < 1: easier to explore the space, but less deeply). The default value of gamma is 1 which is necessary for the MCMC chain to converge to the posterior distribution.
 
 *	`-seed <INT>`   Replace \<INT\> with a positive integer to be used as a fixed seed for the random number generator.
-
-*	`-no_tree_list`		This turns off the collection of optimal trees. It can be used to speed up the program when only sampling from the posterior distribution.
 
 *	`-t <filename>`  Replace \<filename\> with a file containing the true tree in GraphViz format.
 
