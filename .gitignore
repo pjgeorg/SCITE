@@ -1,0 +1,7 @@
+*.gch
+*.gv
+*.newick
+*.o
+*.out
+*.s
+*.sw?
